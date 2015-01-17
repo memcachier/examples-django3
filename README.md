@@ -2,15 +2,23 @@
 
 This is an example Django app that uses
 [MemCachier](http://www.memcachier.com) to cache algebraic
-computations. This example is written with Django 1.6.5.
+computations. This example is written with Django 1.6
+
+It uses [django-ascii](https://github.com/memcachier/django-ascii) as
+a backend for caching with Django. This is a alternative backend than
+the one we usually recommend
+[django-pylibmc](https://github.com/jbalogh/django-pylibmc/), but has
+the advantage of using the pure python memcache library,
+[pymemcache](https://github.com/pinterest/pymemcache). It only
+supports one server at this time though.
 
 You can view a working version of this app
-[here](http://memcachier-examples-django.herokuapp.com) that uses
-[MemCachier on Heroku](https://addons.heroku.com/memcachier).
-Running this app on your local machine in development will work as
-well, although then you won't be using MemCachier -- you'll be using a
-local dummy cache. MemCachier is currently only available with various
-cloud providers.
+[here](http://memcachier-examples-django3.herokuapp.com) that uses
+[MemCachier on Heroku](https://addons.heroku.com/memcachier).  Running
+this app on your local machine in development will work as well,
+although then you won't be using MemCachier -- you'll be using a local
+dummy cache. MemCachier is currently only available with various cloud
+providers.
 
 Setting up MemCachier to work in Django is very easy. You need to
 make changes to requirements.txt, settings.py, and any app code that
@@ -33,7 +41,7 @@ $ pip install Django psycopg2 dj-database-url django-pylibmc gunicorn
 $ DEVELOPMENT=1 python manage.py runserver
 ~~~~
 
-Then visit `http://localhost:8000` to view the app. Alternatively you
+Then visit `http://localhost:5000` to view the app. Alternatively you
 can use foreman and gunicorn to run the server locally (after copying
 `dev.env` to `.env`):
 
@@ -41,12 +49,15 @@ can use foreman and gunicorn to run the server locally (after copying
 $ foreman start
 ~~~~
 
+For local development, using `python manage.py runserver` generally provides
+better output.
+
 ## Deploy to Heroku
 
 Run the following commands to deploy the app to Heroku:
 
 ~~~~ .sh
-$ git clone https://github.com/memcachier/examples-django.git
+$ git clone https://github.com/memcachier/examples-django3.git
 $ cd examples-django
 $ heroku create
 $ heroku addons:add memcachier:dev
@@ -61,16 +72,15 @@ default client doesn't support SASL authentication. Run the following
 commands to install the necessary pips:
 
 ~~~~ .shell
-sudo brew install libmemcached
-pip install django-pylibmc pylibmc
+pip install -r requirements
 ~~~~
 
 Don't forget to update your requirements.txt file with these new pips.
 requirements.txt should have the following two lines:
 
 ~~~~
-django-pylibmc==0.5.0
-pylibmc==1.3.0
+memcachier-django-ascii==1.0.0dev1
+pymemcache==1.2.8
 ~~~~
 
 ## settings.py
@@ -87,22 +97,16 @@ os.environ['MEMCACHE_PASSWORD'] = os.environ.get('MEMCACHIER_PASSWORD', '')
 
 CACHES = {
     'default': {
-        'BACKEND': 'django_pylibmc.memcached.PyLibMCCache',
-        'BINARY': True,
+        'BACKEND': 'memcachier_django.ascii.MemcacheCache',
         'OPTIONS': {
-            'no_block': True,
-            'tcp_nodelay': True,
-            'tcp_keepalive': True,
-            'remove_failed': 4,
-            'retry_timeout': 2,
-            'dead_timeout': 10,
-            '_poll_timeout': 2000
+            'no_delay': True,
+            'connect_timeout': 2.5,
+            'timeout': 1.5,
+            'ignore_exc': True,
         }
     }
 }
 ~~~~
-
-Feel free to change the `_poll_timeout` setting to match your needs.
 
 ## Application Code
 
