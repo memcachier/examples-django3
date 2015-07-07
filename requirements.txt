@@ -1,7 +1,7 @@
-Django==1.6.8
+Django==1.6.11
 dj-database-url==0.3.0
-gunicorn==19.1.1
+gunicorn==19.3.0
 memcachier-django-ascii==1.0.0
-psycopg2==2.5.4
+psycopg2==2.6.1
 pymemcache==1.2.8
 wsgiref==0.1.2
