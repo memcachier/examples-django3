@@ -1,8 +1,8 @@
-# MemCachier Django Example App
+# MemCachier Django Example App (ASCII)
 
 This is an example Django app that uses
 [MemCachier](http://www.memcachier.com) to cache algebraic
-computations. This example is written with Django 1.6
+computations. This example is written with Django 1.6.
 
 It uses [django-ascii](https://github.com/memcachier/django-ascii) as
 a backend for caching with Django. This is a alternative backend than
@@ -35,13 +35,13 @@ You can deploy this app yourself to Heroku to play with.
 It is best to use the python `virtualenv` tool to build locally:
 
 ~~~~ .sh
-$ virtualenv venv --distribute
+$ virtualenv -p python2 venv
 $ source venv/bin/activate
-$ pip install Django psycopg2 dj-database-url django-pylibmc gunicorn
+$ pip install -r requirements.txt
 $ DEVELOPMENT=1 python manage.py runserver
 ~~~~
 
-Then visit `http://localhost:5000` to view the app. Alternatively you
+Then visit `http://localhost:8000` to view the app. Alternatively you
 can use foreman and gunicorn to run the server locally (after copying
 `dev.env` to `.env`):
 
@@ -83,12 +83,12 @@ memcachier-django-ascii==1.0.0dev1
 pymemcache==1.2.8
 ~~~~
 
-## settings.py
+## Configuring MemCachier (settings.py)
 
-Configure Django to use pylibmc with SASL authentication. You'll also
-need to setup your environment, because pylibmc expects different
-environment variables than MemCachier provides. Somewhere in your
-settings.py file you should have the following lines:
+To configure Django to use pylibmc with SASL authentication. You'll also need
+to setup your environment, because pylibmc expects different environment
+variables than MemCachier provides. Somewhere in your `settings.py` file you
+should have the following lines:
 
 ~~~~ .python
 os.environ['MEMCACHE_SERVERS'] = os.environ.get('MEMCACHIER_SERVERS', '').replace(',', ';')
@@ -107,6 +107,25 @@ CACHES = {
     }
 }
 ~~~~
+
+## Persistent Connections
+
+By default, Django doesn't use persistent connections with memcached. This is a
+huge performance problem, especially when using SASL authentication as the
+connection setup is even more expensive than normal.
+
+You can fix this by putting the following code in your `wsgi.py` file:
+
+~~~~ .python
+# Fix django closing connection to MemCachier after every request (#11331)
+from django.core.cache.backends.memcached import BaseMemcachedCache
+BaseMemcachedCache.close = lambda self, **kwargs: None
+
+~~~~
+
+There is a bug file against Django for this issue
+([#11331](https://code.djangoproject.com/ticket/11331)).
+
 
 ## Application Code
 
