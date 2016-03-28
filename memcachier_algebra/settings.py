@@ -3,6 +3,7 @@ import os
 
 ## MemCachier Settings
 ## ===================
+# Docs: https://docs.djangoproject.com/en/1.6/topics/cache
 if os.environ.get('DEVELOPMENT', None):
     CACHES = {
         'default': {
@@ -10,15 +11,19 @@ if os.environ.get('DEVELOPMENT', None):
         }
     }
 else:
+    # Configure server credentials
     os.environ['MEMCACHE_SERVERS'] = os.environ.get('MEMCACHIER_SERVERS', '').replace(',', ';')
     os.environ['MEMCACHE_USERNAME'] = os.environ.get('MEMCACHIER_USERNAME', '')
     os.environ['MEMCACHE_PASSWORD'] = os.environ.get('MEMCACHIER_PASSWORD', '')
 
+    # Configure cache settings
     CACHES = {
         'default': {
             'BACKEND': 'memcachier_django.ascii.MemcacheCache',
             'OPTIONS': {
+                # Enable faster IO
                 'no_delay': True,
+                # Timeout for set/get requests
                 'connect_timeout': 2.5,
                 'timeout': 1.5,
                 'ignore_exc': True,
@@ -43,6 +48,15 @@ DATABASES = {
     }
 }
 
+## Static Assets & Heroku
+## ======================
+PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
+STATIC_ROOT = os.path.join(PROJECT_ROOT, 'staticfiles')
+STATIC_URL = '/static/'
+STATICFILES_DIRS = [
+    os.path.join(PROJECT_ROOT, 'static')
+]
+
 ## Other Settings
 ## ==============
 DEBUG = True
@@ -57,11 +71,6 @@ USE_L10N = True
 USE_TZ = True
 MEDIA_ROOT = ''
 MEDIA_URL = ''
-STATIC_ROOT = ''
-STATIC_URL = '/static/'
-STATICFILES_DIRS = [
-    "static/"
-]
 
 STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.FileSystemFinder',
@@ -88,7 +97,7 @@ ROOT_URLCONF = 'memcachier_algebra.urls'
 WSGI_APPLICATION = 'memcachier_algebra.wsgi.application'
 
 TEMPLATE_DIRS = (
-    "templates"
+    os.path.join(PROJECT_ROOT, 'templates'),
 )
 
 INSTALLED_APPS = (
