@@ -97,16 +97,43 @@ os.environ['MEMCACHE_PASSWORD'] = os.environ.get('MEMCACHIER_PASSWORD', '')
 
 CACHES = {
     'default': {
-        'BACKEND': 'memcachier_django.ascii.MemcacheCache',
+        # Use pylibmc
+        'BACKEND': 'django_pylibmc.memcached.PyLibMCCache',
+
+        # Use binary memcache protocol (needed for authentication)
+        'BINARY': True,
+
+        # TIMEOUT is not the connection timeout! It's the default expiration
+        # timeout that should be applied to keys! Setting it to `None`
+        # disables expiration.
+        'TIMEOUT': None,
         'OPTIONS': {
-            'no_delay': True,
-            'connect_timeout': 2.5,
-            'timeout': 1.5,
-            'ignore_exc': True,
+            # Enable faster IO
+            'no_block': True,
+            'tcp_nodelay': True,
+
+            # Keep connection alive
+            'tcp_keepalive': True,
+
+            # Timeout for set/get requests (sadly timeouts don't mark a
+            # server as failed, so failover only works when the connection
+            # is refused)
+            '_poll_timeout': 2000,
+
+            # Use consistent hashing for failover
+            'ketama': True,
+
+            # Configure failover timings
+            'connect_timeout': 2000,
+            'remove_failed': 4,
+            'retry_timeout': 2,
+            'dead_timeout': 10
         }
     }
 }
 ~~~~
+
+Feel free to change the `_poll_timeout` setting to match your needs.
 
 ## Persistent Connections
 
@@ -144,11 +171,11 @@ We are happy to receive bug reports, fixes, documentation enhancements,
 and other improvements.
 
 Please report bugs via the
-[github issue tracker](http://github.com/memcachier/examples-django/issues).
+[github issue tracker](http://github.com/memcachier/examples-django3/issues).
 
-Master [git repository](http://github.com/memcachier/examples-django):
+Master [git repository](http://github.com/memcachier/examples-django3):
 
-* `git clone git://github.com/memcachier/examples-django.git`
+* `git clone git://github.com/memcachier/examples-django3.git`
 
 ## Licensing
 
